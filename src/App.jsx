@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import WordPairDisplay from "./components/WordPairDisplay";
+import Result from "./components/Result";
+import ScoreBoard from "./components/ScoreBoard";
+import RestartButton from "./components/RestartButton";
 
 const wordPairs = [
   ["Listen", "Silent"],
@@ -121,6 +124,85 @@ function App() {
       normalize(str2).split("").sort().join("")
     );
   };
+
+  // Get a random pair of words
+  const getRandomPair = () => {
+    const randomIndex = Math.floor(Math.random() * wordPairs.length);
+    return wordPairs[randomIndex];
+  };
+
+  const newRound = () => {
+    if (level > 10) {
+      setGameOver(true);
+      return;
+    }
+    const pair = getRandomPair();
+    setCurrentPair(pair);
+    setResult("");
+    setTimeLeft(Math.max(3, 10 - level)); // Reduce time based on level, but no lower than 3 seconds
+  };
+
+  // Handle player's answer
+  const handleChoice = (isAnagram) => {
+    const correctAnswer = areAnagrams(currentPair[0], currentPair[1]);
+    if (isAnagram === correctAnswer) {
+      setScore(score + 1);
+      setResult("Correct!");
+    } else {
+      setScore(Math.max(0, score - 1));
+      setResult("Wrong!");
+    }
+    setLevel(level + 1);
+  };
+
+  // Timer Effect
+  useEffect(() => {
+    if (timeLeft > 0 && !gameOver) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0) {
+      setResult("Time's up!");
+      setScore(Math.max(0, score - 1));
+      setLevel(level + 1);
+    }
+  }, [timeLeft, gameOver]);
+
+  // Start new round when level changes
+  useEffect(() => {
+    if (!gameOver) {
+      newRound();
+    }
+  }, [level, gameOver]);
+
+  // Restart game
+  const restartGame = () => {
+    setScore(0);
+    setLevel(1);
+    setGameOver(false);
+    newRound();
+  };
+
+  return (
+    <div className="App">
+      <h1>Anagram Game</h1>
+      {gameOver ? (
+        <div>
+          <h2>Game Over! You reached Level 10</h2>
+          <RestartButton onRestart={restartGame} />
+        </div>
+      ) : (
+        <>
+          <WordPairDisplay pair={currentPair} />
+          <div>
+            <button onClick={() => handleChoice(true)}>Yes</button>
+            <button onClick={() => handleChoice(false)}>No</button>
+          </div>
+          <Result result={result} />
+          <ScoreBoard score={score} level={level} timeLeft={timeLeft} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export default App;
