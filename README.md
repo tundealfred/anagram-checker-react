@@ -1,3 +1,5 @@
+Click the link and enjoy! : https://anagram-checker-react.vercel.app/ (Beta phase)
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
